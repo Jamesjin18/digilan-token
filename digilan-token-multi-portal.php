@@ -21,6 +21,80 @@ class DigilanToken_Multi_Portal {
     add_action('admin_post_portal_post', 'DigilanToken_Multi_Portal::portal_post', 10, 2);
     add_shortcode('digilan_custom_portal_form', 'DigilanToken_Multi_Portal::custom_portal_form_shortcode');
 
+    public static function add_new_ap_to_client($hostname, $mac, $user_id)
+    {
+        if (!$user_id) {
+            error_log('Invalid user id');
+            return;
+        }
+        $new_ap = array(
+            $hostname => array(
+                'mac' => $mac
+            )
+        );
+        $ap_list = get_user_meta($user_id,'digilan-token-ap-list',true);
+        if ($ap_list !== '') {
+            $ap_list = (array) maybe_unserialize($ap_list);
+        } else {
+            $ap_list = array();
+        }
+        
+        $ap_list = array_merge($ap_list,$new_ap);
+        if (!update_user_meta($user_id,'digilan-token-ap-list',$ap_list)) {
+            error_log('Fail to update ap list of a user ');
+            return;
+        }
+    }
+
+    public function update_client_ap_portal_data($hostname, $portal, $landing, $timeout)
+    {
+        $access_points = DigilanToken::$settings->get('access-points');
+        $new_data = array(
+            'portal' => $portal,
+            'landing' => $landing,
+            'timeout' => $timeout
+        );
+        $ap_list = self::search_ap_list_with_hostname($hostname);
+        if (!$ap_list) {
+            error_log('There is no hostname associated with a client');
+            return;
+        }
+        foreach ($ap_list as $key=>$value) {
+            $access_points[$key] = array_merge($access_points[$key],$new_data);
+        }
+        $data = array(
+            'access-point' => $access_points
+        )
+        DigilanToken::$settings->update($data);
+    }
+
+    public static function search_ap_list_with_hostname($hostname)
+    {
+        $ap_list = array();
+        $query = "SELECT 'user_id','meta_value' FROM {$wpdb->prefix}usermeta AS meta WHERE meta_key = '%s'";
+        $query = $wpdb->prepare($query, 'digilan-token-ap-list');
+        $rows = $wpdb->get_results($query);
+        if (null === $rows)) {
+            error_log('Access points are not available.');
+            return false;
+        } else {
+            foreach ($rows as $row) {
+                $row = (array) maybe_unserialize($row);
+                $aps = $row->meta_value;
+                foreach ($aps as $ap) {
+                    if ($ap[$hostname]) {
+                        $ap_list = $aps;
+                        break 2;
+                    }
+                }
+            }
+        }
+        if (count($ap_list)>0) {
+            return $ap_list;
+        }
+        return false;
+    }
+    
     public function custom_portal_form_shortcode()
     {
         if (!get_current_user_id()) {
