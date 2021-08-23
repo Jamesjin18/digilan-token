@@ -20,7 +20,6 @@ class DigilanTokenMultiPortal {
     
     public static function link_client_ap($hostname, $user_id)
     {
-        print($hostname.' '.$user_id);
         $ap_list = self::get_valid_ap_list($user_id);
         if (false === $ap_list) {
             error_log($user_id.' is invalid - from link_client_ap function');
@@ -82,13 +81,16 @@ class DigilanTokenMultiPortal {
     {
         $settings = clone DigilanToken::$settings;
         $access_points = $settings->get('access-points');
-        $specific_ap_settings = $access_points[$hostname]['specific_ap_settings'];
+        
+        if (is_object($access_points[$hostname]['specific_ap_settings'])) {
+            $specific_ap_settings = clone $access_points[$hostname]['specific_ap_settings'];
+        }
         if (empty($specific_ap_settings)) {
             //save only in global setting
             DigilanToken::$settings->update($new_shared_settings);
             return true;
         }
-        $specific_ap_settings->update_settings($new_settings);
+        $specific_ap_settings->update_settings($new_shared_settings);
         $access_points[$hostname]['specific_ap_settings'] = $specific_ap_settings;  
         //save specific ap settings
         DigilanToken::$settings->update(array(
@@ -123,8 +125,10 @@ class DigilanTokenMultiPortal {
     {
         $settings = clone DigilanToken::$settings;
         $access_points = $settings->get('access-points');
-        
-        $specific_ap_settings = $access_points[$hostname]['specific_ap_settings'];
+
+        if (is_object($access_points[$hostname]['specific_ap_settings'])) {
+            $specific_ap_settings = clone $access_points[$hostname]['specific_ap_settings'];
+        }
         if (empty($specific_ap_settings)) {
             $mac_setting = array(
                 'mac' => $access_points[$hostname]['mac'],
@@ -161,13 +165,12 @@ class DigilanTokenMultiPortal {
             error_log('Fail to update ap list of a user '.$user_id.' - from update_client_ap_setting function');
             die();
         }
-        
+        return true;
     }
 
     public static function get_client_ap_list_from_hostname($hostname)
     {
         global $wpdb;
-        $ap_list = array();
         $query = "SELECT user_id,meta_value FROM {$wpdb->prefix}usermeta AS meta WHERE meta_key = '%s'";
         $query = $wpdb->prepare($query, 'digilan-token-ap-list');
         $rows = $wpdb->get_results($query);
@@ -245,6 +248,9 @@ class DigilanTokenMultiPortal {
         if ($ap_list === false) {
             error_log('Could not get user ap list, user id '.$user_id.'invalid - from get_ap_list function');
             return false;
+        }
+        if (empty($ap_list)) {
+            $ap_list = array();
         }
         return (array) maybe_unserialize($ap_list);
     }

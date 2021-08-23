@@ -421,7 +421,6 @@ class DigilanTokenAdmin
             wp_redirect(self::getAdminUrl('access-point'));
             exit();
         }
-        $settings = clone DigilanToken::$settings;
         $data = array(
             'timeout' => $timeout,
             'landing-page' => $landing_page,
@@ -453,7 +452,6 @@ class DigilanTokenAdmin
             wp_redirect(self::getAdminUrl('access-point'));
             exit();
         }
-        $settings = clone DigilanToken::$settings;
         $new_settings = array(
             'ssid' => $ssid,
             'schedule' => $intervals,
