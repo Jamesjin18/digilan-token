@@ -34,7 +34,7 @@ class DigilanTokenAdmin
     {
         add_action('admin_menu', 'DigilanTokenAdmin::admin_menu', 1);
         add_action('admin_init', 'DigilanTokenAdmin::admin_init');
-
+        add_action('digilan_token_send_mail', 'DigilanTokenAdmin::send_mails');
         add_filter('plugin_action_links', 'DigilanTokenAdmin::plugin_action_links', 10, 2);
 
         add_filter('dlt_update_settings_validate_digilan-token_social_login', 'DigilanTokenAdmin::validateSettings', 10, 2);
@@ -365,6 +365,20 @@ class DigilanTokenAdmin
             wp_redirect(self::getAdminBaseUrl());
             exit();
         } 
+    }
+
+    public static function create_new_cron_schedule($schedules)
+    {
+        $mail_timestamp = 60;
+        if(!isset($schedules['interval_mailing_time_']))
+        {
+            $schedules['interval_mailing_time_'] = array(
+                'display' => __( 'interval mailing time '.$mail_timestamp, 'DigilanToken' ),
+                'interval' => $mail_timestamp,
+            );
+        }
+        
+        return $schedules;
     }
 
     private static function dkim_txt_record()
