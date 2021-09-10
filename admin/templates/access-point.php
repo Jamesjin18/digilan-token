@@ -15,7 +15,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
  */
 defined('ABSPATH') || die();
-$settings = DigilanToken::$settings;
+$settings = clone DigilanToken::$settings;
 DigilanTokenActivator::cityscope_bonjour();
 $secret = get_option("digilan_token_secret");
 $re = "/^[0-9A-Za-z]{32}$/";
@@ -62,6 +62,30 @@ if (preg_match($re, $secret) == 1) :
     <h2><?php _e('General settings', 'digilan-token'); ?></h2>
     <table class="form-table">
       <tbody>
+        <?php
+        if (DigilanTokenMultiPortal::is_multi_portal()) {
+        ?>
+        <tr>
+          <th scope="row" style="vertical-align: middle;"><?php _e('Access Point hostname', 'digilan-token'); ?></th>
+          <td>
+            <fieldset>
+              <select name="digilan-token-hostname" id="digilan-token-select-hostname" class="regular-text" form="digilan-token-settings">
+                <?php
+                $access_points = $settings->get('access-points');
+                foreach ($access_points as $hostname=>$content) :
+                  if (is_object($content['specific_ap_settings'])) {
+                ?>
+                  <option value="<?php echo $hostname; ?>"><?php echo $hostname; ?></option>
+                <?php 
+                  } 
+                endforeach; ?>
+              </select>
+            </fieldset>
+          </td>
+        </tr>
+        <?php
+        }
+        ?>
         <tr>
           <th scope="row" style="vertical-align: middle;"><?php _e('Portal login page', 'digilan-token'); ?></th>
           <td>
