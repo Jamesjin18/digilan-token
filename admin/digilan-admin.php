@@ -636,7 +636,7 @@ class DigilanTokenAdmin
         }
         if (null == $hostname) {
             DigilanToken::$settings->update($data);
-            return;
+            return true;
         }
         DigilanTokenMultiPortal::update_client_ap_list_setting($hostname,$data);
     }
