@@ -301,10 +301,23 @@ class DigilanTokenAdmin
                 }
                 self::updateCityscopeCloud($cityscope_cloud);
             } else if ($view == 'multi-portal') {
-                /**
-                 * multi-portal form handle
-                 * 
-                 */
+                if (isset($_POST['digilan-token-link-ap'])) {
+                    $hostname = DigilanTokenSanitize::sanitize_post('digilan-token-hostname');
+                    $user_id = DigilanTokenSanitize::sanitize_post('digilan-token-user-id');
+                    if (false == $hostname) {
+                        \DLT\Notices::addError(__('Invalid hostname.', 'digilan-token'));
+                        wp_redirect(self::getAdminUrl('multi-portal'));
+                        exit();
+                    }
+                    if (false == $user_id) {
+                        \DLT\Notices::addError(__('Invalid user id.', 'digilan-token'));
+                        wp_redirect(self::getAdminUrl('multi-portal'));
+                        exit();
+                    }
+
+                    $result = DigilanTokenMultiPortal::link_client_ap($hostname,$user_id);
+
+                }
             }
             wp_redirect(self::getAdminBaseUrl());
             exit();
