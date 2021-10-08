@@ -132,9 +132,11 @@ class DigilanToken
         add_action('plugins_loaded', 'DigilanTokenDB::check_upgrade_digilan_token_plugin');
         register_activation_hook(DLT_PATH_FILE, 'DigilanTokenDB::install_plugin_tables');
         register_activation_hook(DLT_PATH_FILE, 'DigilanTokenActivator::cityscope_bonjour');
+        register_activation_hook(DLT_PATH_FILE, 'DigilanToken::init_version_file');
         register_activation_hook(DLT_PATH_FILE, 'DigilanToken::create_error_page');
         register_activation_hook(DLT_PATH_FILE, 'DigilanToken::create_default_portal_page');
 
+        register_deactivation_hook(DLT_PATH_FILE, 'DigilanToken::rename_version_file');
         add_action('delete_user', 'DigilanToken::delete_user');
 
         self::$settings = new DigilanTokenSettings('digilan-token_social_login', array(
@@ -156,6 +158,22 @@ class DigilanToken
             'debug' => '0'
         ));
         add_option('cityscope_backend', 'https://admin.citypassenger.com/2019/Portals');
+    }
+    public static function init_version_file() 
+    {
+        if (file_exists(DLT_PATH."/_version.txt")) {
+            rename(DLT_PATH.'/_version.txt',DLT_PATH.'/version.txt');
+        }
+        $myfile = fopen(DLT_PATH."/version.txt", "w");
+        fwrite($myfile, self::$digilan_version);
+        fclose($myfile);
+        
+    }
+
+    public static function rename_version_file() 
+    {
+        rename(DLT_PATH.'/version.txt',DLT_PATH.'/_version.txt');
+    
     }
 
     public static function plugins_loaded()
